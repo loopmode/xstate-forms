@@ -1,20 +1,19 @@
 import { apiClient } from "../../utils/apiClient";
-import { validateEmail } from "../../utils/validate";
-import { createFormMachine } from "../createFormMachine";
+import { validateEmail } from "../../utils/validation";
+import { createFormMachine } from "../form/createFormMachine";
 
-type ResetData = {
+export type ResetData = {
   email: string;
-  password: string;
 };
 
-export const reset = createFormMachine<ResetData>({
+export const resetMachine = createFormMachine<ResetData>({
   id: "reset",
-  submit: function submitLogin(data) {
+  submit: (data) => {
     return apiClient.post("/user/reset", data);
   },
-  validate: function validateLogin(data) {
-    const email = validateEmail(data.email);
-
-    return { email };
+  validate: (data) => {
+    return {
+      email: validateEmail(data.email),
+    };
   },
 });

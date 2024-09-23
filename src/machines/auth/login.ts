@@ -1,21 +1,21 @@
 import { apiClient } from "../../utils/apiClient";
-import { validateEmail } from "../../utils/validate";
-import { createFormMachine } from "../createFormMachine";
+import { validateEmail, validatePassword } from "../../utils/validation";
+import { createFormMachine } from "../form/createFormMachine";
 
-type LoginData = {
+export type LoginData = {
   email: string;
   password: string;
 };
 
-export const login = createFormMachine<LoginData>({
+export const loginMachine = createFormMachine<LoginData>({
   id: "login",
-  submit: function submitLogin(data) {
+  submit: (data) => {
     return apiClient.post("/user/login", data);
   },
-  validate: function validateLogin(data) {
-    const email = validateEmail(data.email);
-    const password = data.password.trim().length > 3;
-
-    return { email, password };
+  validate: (data) => {
+    return {
+      email: validateEmail(data.email),
+      password: validatePassword(data.password),
+    };
   },
 });

@@ -1,26 +1,49 @@
-import { FormEvent, useCallback } from "react";
-import { AuthViewProps } from "./types";
+import { useMachine } from "@xstate/react";
+import { ResetData, resetMachine } from "../../machines/auth/reset";
+import {
+  useChangeHandler,
+  useSubmitHandler,
+  useValidationErrors,
+} from "../../machines/form/hooks";
 
-export function Reset(props: AuthViewProps) {
-  const handleSubmit = useCallback((event: FormEvent) => {
-    event.preventDefault();
-  }, []);
+export function Reset(props: { onBack: () => void; onSuccess: () => void }) {
+  const [snapshot, send, actorRef] = useMachine(resetMachine);
+
+  const validationErrors = useValidationErrors<ResetData>(actorRef);
+
+  const handleSubmit = useSubmitHandler(send);
+  const handleChange = useChangeHandler(send);
+
   return (
     <div>
       <header>
-        <button onClick={() => props.send({ type: "GO_BACK" })}>
-          &laquo; Back
-        </button>
+        <button onClick={props.onBack}>&laquo; Back</button>
       </header>
 
-      <form onSubmit={handleSubmit}>
-        <h3>Reset</h3>
-        <p>
-          <label>email</label>
-          <input name="email" />
-        </p>
-        <button type="submit">submit</button>
-      </form>
+      <h2>Reset</h2>
+
+      {snapshot.matches("editing") && (
+        <form onSubmit={handleSubmit}>
+          <p>
+            <label>email</label>
+            <input name="email" onChange={handleChange} />
+            {validationErrors.email}
+          </p>
+          <button type="submit">submit</button>
+        </form>
+      )}
+
+      {snapshot.matches("submitting") && <p>Resetting password...</p>}
+
+      {snapshot.matches("success") && (
+        <div>
+          <p>Password reset!</p>
+          <p>
+            You should have received an email with a link to set a new password
+          </p>
+          <button onClick={props.onSuccess}>Proceed</button>
+        </div>
+      )}
     </div>
   );
 }
