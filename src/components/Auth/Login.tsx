@@ -32,12 +32,12 @@ export function Login(props: {
           <p className={cx({ error: validationErrors.email })}>
             <label>email</label>
             <input name="email" onChange={handleChange} />
-            {validationErrors.email}
+            <span>{validationErrors.email}</span>
           </p>
           <p className={cx({ error: validationErrors.password })}>
             <label>password</label>
             <input name="password" type="password" onChange={handleChange} />
-            {validationErrors.password}
+            <span>{validationErrors.password}</span>
           </p>
           <button type="submit">submit</button>
         </form>

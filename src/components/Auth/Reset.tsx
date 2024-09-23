@@ -27,7 +27,7 @@ export function Reset(props: { onBack: () => void; onSuccess: () => void }) {
           <p>
             <label>email</label>
             <input name="email" onChange={handleChange} />
-            {validationErrors.email}
+            <span>{validationErrors.email}</span>
           </p>
           <button type="submit">submit</button>
         </form>

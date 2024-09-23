@@ -28,17 +28,17 @@ export function Register(props: { onBack: () => void; onSuccess: () => void }) {
           <p className={cx({ error: validationErrors.email })}>
             <label>email</label>
             <input name="email" onChange={handleChange} />
-            {validationErrors.email}
+            <span>{validationErrors.email}</span>
           </p>
           <p className={cx({ error: validationErrors.firstName })}>
             <label>firstName</label>
             <input name="firstName" onChange={handleChange} />
-            {validationErrors.firstName}
+            <span>{validationErrors.firstName}</span>
           </p>
           <p className={cx({ error: validationErrors.lastName })}>
             <label>lastName</label>
             <input name="lastName" onChange={handleChange} />
-            {validationErrors.lastName}
+            <span>{validationErrors.lastName}</span>
           </p>
           <p className={cx({ error: validationErrors.gender })}>
             <label>gender</label>
@@ -72,7 +72,7 @@ export function Register(props: { onBack: () => void; onSuccess: () => void }) {
               </label>
             </span>
             <br />
-            {validationErrors.gender}
+            <span>{validationErrors.gender}</span>
           </p>
           <button type="submit">submit</button>
         </form>
