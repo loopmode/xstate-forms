@@ -3,9 +3,10 @@ import { assign, fromPromise } from "xstate";
 
 import { Actor, setup } from "xstate";
 
-export type SendFunction = Actor<ReturnType<typeof createFormMachine>>["send"];
+export type FormMachine = ReturnType<typeof createFormMachine>;
+export type FormMachineSend = Actor<FormMachine>["send"];
 
-export type InputEvent = {
+type InputEvent = {
   type: "INPUT";
   /** the name of the DOM input element */
   name: string;
@@ -13,23 +14,18 @@ export type InputEvent = {
   value: string;
 };
 
-export type SubmitEvent = {
+type SubmitEvent<ValidationErrors> = {
   type: "SUBMIT";
   /** validation errors will be added to the event object via actions */
-  validationErrors?: unknown;
+  validationErrors?: ValidationErrors;
 };
 
 export function createFormMachine<
   Data extends Record<string, string>,
   ResponseData = unknown,
   ValidationErrors extends { [key: string]: unknown } = Partial<
-    Record<keyof Data, boolean | string | undefined>
-  >,
-  Context extends MachineContext | undefined = {
-    validationErrors: ValidationErrors;
-    errorMessage: string;
-    data: Data;
-  }
+    Record<keyof Data, unknown>
+  >
 >({
   id,
   submit = () => Promise.resolve({} as ResponseData),
@@ -54,7 +50,10 @@ export function createFormMachine<
         errorMessage: string;
         data: Data;
       },
-      events: {} as InputEvent | SubmitEvent | { type: "BACK" },
+      events: {} as
+        | InputEvent
+        | SubmitEvent<ValidationErrors>
+        | { type: "BACK" },
     },
 
     actions: {
@@ -110,6 +109,7 @@ export function createFormMachine<
       validationErrors: {} as ValidationErrors,
       data: {} as Data,
     },
+
     initial: "editing",
 
     states: {
@@ -121,11 +121,9 @@ export function createFormMachine<
           BACK: {
             target: "back",
           },
-
           INPUT: {
-            actions: {
-              type: "assignInput",
-            },
+            // no target, just assign context
+            actions: "assignInput",
           },
         },
       },
@@ -138,7 +136,6 @@ export function createFormMachine<
           {
             actions: "assignValidationErrors",
             target: "editing",
-            reenter: true,
           },
         ],
       },
@@ -150,10 +147,8 @@ export function createFormMachine<
             target: "success",
           },
           onError: {
+            actions: "assignErrorMessage",
             target: "editing",
-            actions: {
-              type: "assignErrorMessage",
-            },
           },
         },
       },

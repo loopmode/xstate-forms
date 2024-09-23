@@ -1,15 +1,15 @@
 import { ChangeEvent, FormEvent } from "react";
 
-import { SendFunction } from "./createFormMachine";
+import { FormMachineSend } from "./createFormMachine";
 
-export function createSubmitHandler(send: SendFunction) {
+export function createSubmitHandler(send: FormMachineSend) {
   return (event: FormEvent) => {
     event.preventDefault();
     send({ type: "SUBMIT" });
   };
 }
 
-export function createChangeHandler(send: SendFunction) {
+export function createChangeHandler(send: FormMachineSend) {
   return (event: ChangeEvent<HTMLInputElement>) => {
     send({
       type: "INPUT",
