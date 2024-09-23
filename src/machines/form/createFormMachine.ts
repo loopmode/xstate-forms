@@ -78,6 +78,10 @@ export function createFormMachine<
             ...context.data,
             [name]: value,
           },
+          validationErrors: {
+            ...context.validationErrors,
+            [name]: undefined,
+          },
         };
       }),
 
