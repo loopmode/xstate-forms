@@ -1,7 +1,4 @@
-import { EventObject, assign, sendTo, setup } from "xstate";
-import { loginMachine } from "./login";
-import { resetMachine } from "./reset";
-import { registerMachine } from "./register";
+import { setup } from "xstate";
 
 export const authMachine = setup({
   types: {

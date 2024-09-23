@@ -1,11 +1,11 @@
 import { useMachine } from "@xstate/react";
+import cx from "classnames";
 import { LoginData, loginMachine } from "../../machines/auth/login";
 import {
   useChangeHandler,
   useSubmitHandler,
   useValidationErrors,
 } from "../../machines/form/hooks";
-import cx from "classnames";
 
 export function Login(props: {
   onRegister?: () => void;

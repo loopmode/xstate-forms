@@ -1,13 +1,29 @@
 import type { MachineContext } from "xstate";
 import { assign, fromPromise } from "xstate";
-import { formMachine } from "./formMachine";
+
+import { Actor, setup } from "xstate";
+
+export type SendFunction = Actor<ReturnType<typeof createFormMachine>>["send"];
+
+export type InputEvent = {
+  type: "INPUT";
+  /** the name of the DOM input element */
+  name: string;
+  /** the value of the DOM input element */
+  value: string;
+};
+
+export type SubmitEvent = {
+  type: "SUBMIT";
+  /** validation errors will be added to the event object via actions */
+  validationErrors?: unknown;
+};
 
 export function createFormMachine<
-  Data extends Record<string, unknown>,
+  Data extends Record<string, string>,
   ResponseData = unknown,
-  ValidationErrors extends Record<string, unknown> = Record<
-    keyof Data,
-    unknown
+  ValidationErrors extends { [key: string]: unknown } = Partial<
+    Record<keyof Data, boolean | string | undefined>
   >,
   Context extends MachineContext | undefined = {
     validationErrors: ValidationErrors;
@@ -31,19 +47,32 @@ export function createFormMachine<
    */
   validate?: (data: Data) => ValidationErrors;
 }) {
-  return formMachine.provide({
+  const formMachine = setup({
+    types: {
+      context: {} as {
+        validationErrors: ValidationErrors;
+        errorMessage: string;
+        data: Data;
+      },
+      events: {} as InputEvent | SubmitEvent | { type: "BACK" },
+    },
+
     actions: {
       assignValidationErrors: assign({
-        validationErrors: ({ context }) => validate(context.data as Data),
+        validationErrors: ({ context }) => validate(context.data),
       }),
-      assignErrorMessage: assign(({ event }) => {
-        // TODO how and where to find the error in event?
-        console.log("!! assignErrorMessage", event);
 
-        return { errorMessage: "failed" };
+      assignErrorMessage: assign({
+        errorMessage: ({ event }) => {
+          // TODO how and where to find the error in event?
+          console.log("!! assignErrorMessage", event);
+
+          return "failed";
+        },
       }),
+
       assignInput: assign(({ context, event }) => {
-        const { name, value } = event as { name: string; value: string };
+        const { name, value } = event as InputEvent;
 
         return {
           data: {
@@ -52,18 +81,94 @@ export function createFormMachine<
           },
         };
       }),
-      clearErrors: assign({ errorMessage: "", validationErrors: {} }),
+
+      clearErrors: assign({
+        errorMessage: "",
+        validationErrors: {} as ValidationErrors,
+      }),
     },
+
     actors: {
-      submit: fromPromise(({ input }) => submit(input.data as Data)),
+      submit: fromPromise<ResponseData, { data: Data }>(({ input }) =>
+        submit(input.data)
+      ),
     },
+
     guards: {
       isValid: ({ context }) => {
-        const hasError = Object.values(validate(context.data as Data)).some(
-          Boolean
-        );
+        const validationResult = validate(context.data);
+
+        const hasError = Object.values(validationResult).some(Boolean);
         return !hasError;
       },
     },
+  }).createMachine({
+    /** @xstate-layout N4IgpgJg5mDOIC5QAoC2BDAxgCwJYDswBKAOklwBcCoBiAZQFUAhAWQEkAVAbQAYBdRKAAOAe1iVcI-IJAAPRACYArAA4SCgIw8AnABYtAZgDsPAxoUA2ADQgAnot26SK0zxUHjunkqUWDAX38bNCw8QlJyKnxaJgBBAGEAaV4BJBBRcSopGXkEAFoNbRIlA21vFW0LBUqVI10bewQNJR51Mo8NDXcjC19A4IwcAmIyCAlomjYAOQAFBm5+GQyJbLTcvO0NZxUFFXMlBsQDBVaSut0LHh4qjTN+kBCh8JIAN3QAG1wIdCjaFKWxCtpGtEEpdiRLtoDLU6pVdMdDghlE5dhYvDCLFUjNoVPdHmERm9Pt9fjQuBpUsJAVlgaBcro9M59gozJjNlVEccFCQjLULns6tifEo8YMCaRYABXABGqEopIgUjAJAILxEAGtlfjhhKZXKKL8EKqRJgfpJ8Cl-mlljScogVBVnHoqpcTDs9Ijbk5tEoTFcLEYjNVjrigg8xTqSFLZfLqDQwAAnBMiBMkITvH4AMxTqBI2ue0f1huNppplsW1up5rtCCU2iMJB4LN0LQUDLRCLsiE63JZPBbaJOVTKoYGoUjUswmDgsBocSSVqpmWrIKa3gsJF0DpDbJ4Gl0CkRdRIlTqtzbFihlW0gTD+BEEDgMnzxABy9WdMQeU03O01SUW4mNC8J-oieRbhCShaEGLj7ABPqiuOzyRNQb5AjWFhbPu1wKJYPTXC4Bj1F2SKOM4pidJ0Jg4hoFiIU8hIfF8ZrRGhtqrl4BiNoUJSFGYBh7tYJFtk4hGURo1F7FU9HilGeqxqxlbvrSciID0RTuHWYIslBtxCY0uFqCUg4ES2tRETJE6SlOM5sSun5rj4xSYvCyg9GCUGeh4m6+NoPq0dCLiWJZzzSlg6p2R+qn5LR3r-oBpgqCBh4kdCzhbn+RiFHyLbeLe-hAA */
+    id,
+    context: {
+      errorMessage: "",
+      validationErrors: {} as ValidationErrors,
+      data: {} as Data,
+    },
+    initial: "editing",
+
+    states: {
+      editing: {
+        on: {
+          SUBMIT: {
+            target: "validating",
+          },
+          BACK: {
+            target: "back",
+          },
+
+          INPUT: {
+            actions: {
+              type: "assignInput",
+            },
+          },
+        },
+      },
+      validating: {
+        always: [
+          {
+            guard: "isValid",
+            target: "submitting",
+          },
+          {
+            actions: "assignValidationErrors",
+            target: "editing",
+            reenter: true,
+          },
+        ],
+      },
+      submitting: {
+        invoke: {
+          src: "submit",
+          input: ({ context }) => ({ data: context.data }),
+          onDone: {
+            target: "success",
+          },
+          onError: {
+            target: "editing",
+            actions: {
+              type: "assignErrorMessage",
+            },
+          },
+        },
+      },
+      success: {
+        on: {
+          BACK: {
+            target: "back",
+          },
+        },
+      },
+
+      back: {
+        type: "final",
+      },
+    },
   });
+  return formMachine;
 }

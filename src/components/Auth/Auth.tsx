@@ -1,9 +1,9 @@
-import { useMachine, useSelector } from "@xstate/react";
-import { Login } from "./Login";
+import { useMachine } from "@xstate/react";
+import { useCallback } from "react";
 import { authMachine } from "../../machines/auth/auth";
-import { Reset } from "./Reset";
+import { Login } from "./Login";
 import { Register } from "./Register";
-import { FormEvent, useCallback } from "react";
+import { Reset } from "./Reset";
 
 export function Auth() {
   const [snapshot, send] = useMachine(authMachine);

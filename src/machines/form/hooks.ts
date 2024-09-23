@@ -2,7 +2,7 @@ import { useCallback } from "react";
 
 import { useSelector } from "@xstate/react";
 import { AnyActorRef } from "xstate";
-import { SendFunction } from "./formMachine";
+import { SendFunction } from "./createFormMachine";
 import { createChangeHandler, createSubmitHandler } from "./utils";
 
 export function useSubmitHandler(send: SendFunction) {

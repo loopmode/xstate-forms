@@ -1,6 +1,6 @@
 import { ChangeEvent, FormEvent } from "react";
 
-import { SendFunction } from "./formMachine";
+import { SendFunction } from "./createFormMachine";
 
 export function createSubmitHandler(send: SendFunction) {
   return (event: FormEvent) => {

@@ -1,11 +1,11 @@
 import { useMachine } from "@xstate/react";
+import cx from "classnames";
 import { RegisterData, registerMachine } from "../../machines/auth/register";
 import {
   useChangeHandler,
   useSubmitHandler,
   useValidationErrors,
 } from "../../machines/form/hooks";
-import cx from "classnames";
 
 export function Register(props: { onBack: () => void; onSuccess: () => void }) {
   const [snapshot, send, actorRef] = useMachine(registerMachine);
