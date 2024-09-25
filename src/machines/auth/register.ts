@@ -5,7 +5,7 @@ import {
   validateLastName,
   validateRequiredString,
 } from "../../utils/validation";
-import { createFormMachine } from "../form/createFormMachine";
+import { createFormMachine } from "../form/formMachine.create";
 
 export type RegisterData = {
   email: string;

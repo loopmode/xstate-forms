@@ -24,7 +24,7 @@ export function createFormMachine<
   Data extends Record<string, string>,
   ResponseData = unknown,
   ValidationErrors extends { [key: string]: unknown } = Partial<
-    Record<keyof Data, unknown>
+    Record<keyof Data, string | boolean | undefined>
   >
 >({
   id,
@@ -57,20 +57,19 @@ export function createFormMachine<
     },
 
     actions: {
-      assignValidationErrors: assign({
+      handleValidationErrors: assign({
         validationErrors: ({ context }) => validate(context.data),
       }),
 
-      assignErrorMessage: assign({
+      handleSubmitError: assign({
         errorMessage: ({ event }) => {
-          // TODO how and where to find the error in event?
-          console.log("!! assignErrorMessage", event);
-
-          return "failed";
+          // TODO study response errors and implement meaningful messages
+          console.log("submit failed", event);
+          return "submit failed";
         },
       }),
 
-      assignInput: assign(({ context, event }) => {
+      handleInput: assign(({ context, event }) => {
         const { name, value } = event as InputEvent;
 
         return {
@@ -78,16 +77,12 @@ export function createFormMachine<
             ...context.data,
             [name]: value,
           },
+          // clear the validation error for a field as soon as the user starts typing
           validationErrors: {
             ...context.validationErrors,
             [name]: undefined,
           },
         };
-      }),
-
-      clearErrors: assign({
-        errorMessage: "",
-        validationErrors: {} as ValidationErrors,
       }),
     },
 
@@ -127,7 +122,7 @@ export function createFormMachine<
           },
           INPUT: {
             // no target, just assign context
-            actions: "assignInput",
+            actions: "handleInput",
           },
         },
       },
@@ -138,7 +133,7 @@ export function createFormMachine<
             target: "submitting",
           },
           {
-            actions: "assignValidationErrors",
+            actions: "handleValidationErrors",
             target: "editing",
           },
         ],
@@ -151,7 +146,7 @@ export function createFormMachine<
             target: "success",
           },
           onError: {
-            actions: "assignErrorMessage",
+            actions: "handleSubmitError",
             target: "editing",
           },
         },

@@ -1,6 +1,6 @@
 import { apiClient } from "../../utils/apiClient";
 import { validateEmail } from "../../utils/validation";
-import { createFormMachine } from "../form/createFormMachine";
+import { createFormMachine } from "../form/formMachine.create";
 
 export type ResetData = {
   email: string;
